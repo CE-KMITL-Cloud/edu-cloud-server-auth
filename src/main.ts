@@ -12,6 +12,9 @@ async function bootstrap() {
 
   const app = await NestFactory.create(AppModule)
 
+  // ! Disable this
+  app.enableCors()
+
   let docPath = 'doc'
   if (process.env.NODE_ENV == 'production') {
     docPath = 'something-that-can-not-give-to-user-know-doc'

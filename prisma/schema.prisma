@@ -1,0 +1,80 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model admin {
+  username    String   @id
+  password    String?
+  name        String?
+  status      Boolean?
+  create_time String?
+  expire_time String?
+  salt        String?
+}
+
+model faculty {
+  username    String   @id
+  password    String?
+  name        String?
+  status      Boolean?
+  create_time String?
+  expire_time String?
+  salt        String?
+}
+
+model instance {
+  vmid        String   @id
+  ownerid     String?
+  node        String?
+  name        String?
+  is_template Boolean?
+  max_cpu     Decimal? @db.Decimal
+  max_ram     Decimal? @db.Decimal
+  max_disk    Decimal? @db.Decimal
+  create_time String?
+  expire_time String?
+}
+
+model instance_limit {
+  username     String   @id
+  max_cpu      Decimal? @db.Decimal
+  max_ram      Decimal? @db.Decimal
+  max_disk     Decimal? @db.Decimal
+  max_instance BigInt?
+}
+
+model pool {
+  id          BigInt   @id @default(autoincrement())
+  owner       String?
+  code        String?
+  name        String?
+  vmid        String[]
+  member      String[]
+  create_time String?
+  expire_time String?
+}
+
+model sizing {
+  vmid        String   @id
+  node        String?
+  name        String?
+  max_cpu     Decimal? @db.Decimal
+  max_ram     Decimal? @db.Decimal
+  max_disk    Decimal? @db.Decimal
+  create_time String?
+}
+
+model student {
+  username    String   @id
+  password    String?
+  name        String?
+  status      Boolean?
+  create_time String?
+  expire_time String?
+  salt        String?
+}

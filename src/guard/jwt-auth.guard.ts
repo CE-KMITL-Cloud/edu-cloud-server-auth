@@ -9,7 +9,7 @@ export class JwtAuthGuard extends AuthGuard('jwt') {
     super()
   }
 
-  public handleRequest = (err: any, user: JwtPayload): any => {
+  public handleRequest(err: any, user: JwtPayload): any {
     if (err || !user) {
       throw new UnauthorizedException()
     }

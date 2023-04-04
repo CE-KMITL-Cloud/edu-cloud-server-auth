@@ -1,8 +1,7 @@
 import { Inject, Injectable, Logger } from '@nestjs/common'
 import { JwtService } from '@nestjs/jwt'
-import { createHash } from 'crypto'
 
-import { getRandomHash } from 'src/utils/getRandomHash'
+import { getHashedPassword } from 'src/utils/getHash'
 
 import { CacheService } from 'src/cache/cache.service'
 import { INJECT_CACHE } from 'src/cache/cache.utils'
@@ -12,26 +11,28 @@ import { JwtPayload, JwtResult, User } from 'src/types'
 export class AuthService {
   private readonly logger = new Logger(AuthService.name)
 
-  constructor(private jwtService: JwtService, @Inject(INJECT_CACHE) private cacheService: CacheService) {}
+  constructor(
+    private readonly jwtService: JwtService,
+    @Inject(INJECT_CACHE) private readonly cacheService: CacheService,
+  ) {}
 
   // TODO: Use real hashedPassword
   public async validate(user: User, password: string): Promise<boolean> {
-    // const hashedPassword = this.getHashedPassword(password, user.salt)
+    const hashedPassword = getHashedPassword(password, user.salt)
 
-    if (/*hashedPassword*/ password === user.password) {
+    if (hashedPassword === user.password) {
       return true
     }
 
     this.logger.error('[AuthService - validateUser] Invalid Password', {
       email: user.email,
-      username: user.username,
     })
 
     return false
   }
 
   public async login(user: User): Promise<JwtResult> {
-    const payload: JwtPayload = { email: user.email, username: user.username }
+    const payload: JwtPayload = { email: user.email, name: user.name }
 
     const accessToken = this.getAccessToken(payload)
     const refreshToken = this.getRefreshToken(payload)
@@ -42,7 +43,7 @@ export class AuthService {
   }
 
   public async refresh(user: User, oldRefreshToken: string): Promise<JwtResult> {
-    const payload: JwtPayload = { email: user.email, username: user.username }
+    const payload: JwtPayload = { email: user.email, name: user.name }
 
     const accessToken = this.getAccessToken(payload)
     const refreshToken = this.getRefreshToken(payload)
@@ -54,25 +55,15 @@ export class AuthService {
     return { accessToken, refreshToken, tokenType: 'Bearer' }
   }
 
-  generateSalt() {
-    return getRandomHash().slice(0, 7)
-  }
-
-  getHashedPassword(password: string, salt: string) {
-    return createHash('sha256')
-      .update(password + salt)
-      .digest('hex')
-  }
-
-  getAccessToken(payload: any) {
+  public getAccessToken(payload: any) {
     return this.jwtService.sign(payload)
   }
 
-  getRefreshToken(payload: any) {
+  public getRefreshToken(payload: any) {
     return this.jwtService.sign({ ...payload, isRefreshToken: true }, { expiresIn: 60 * 60 * 24 })
   }
 
-  public async validateRefreshToken(token: string): Promise<{ username: string; email: string } | null> {
+  public async validateRefreshToken(token: string): Promise<{ name: string; email: string } | null> {
     try {
       const decoded = await this.jwtService.verifyAsync(token)
 

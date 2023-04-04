@@ -12,11 +12,13 @@ export const config = (): Config => {
   const config: Config = {
     port: parseInt(process.env.PORT || '5000'),
     jwtSecret: process.env.JWT_SECRET || 'cepp',
+
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),
       ttl: parseInt(process.env.REDIS_TTL || '86400'),
     },
+
     postgres: {
       host: process.env.POSTGRES_HOST ?? 'localhost',
       port: parseInt(process.env.POSTGRES_PORT || '5432'),

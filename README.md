@@ -1,37 +1,44 @@
 ## Installation
 
 ```bash
-yarn install
+> yarn install
 ```
 
 ## Running the app
 
+#### run postgresql database
+
 ```bash
-# development
-$ yarn run start
+> cd edu-cloud-api
+> docker-compose up
+```
 
-# watch mode
-$ yarn run start:dev
+#### run radis
 
-# production mode
-$ yarn run start:prod
+```bash
+> docker-compose up
+```
+
+#### pull database
+
+```bash
+> yarn db-pull:dev
+```
+
+#### generate prisma code from db
+
+```bash
+> yarn generate
+```
+
+#### start app
+
+```bash
+> yarn dev
 ```
 
 ## Doc (swagger)
 
 ```text
-  localhost:5000/doc/
-```
-
-## Test(Don't use)
-
-```bash
-# unit tests
-$ yarn run test
-
-# e2e tests
-$ yarn run test:e2e
-
-# test coverage
-$ yarn run test:cov
+ - localhost:5000/doc/
 ```

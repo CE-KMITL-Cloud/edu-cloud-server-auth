@@ -7,7 +7,7 @@ import { CacheOption } from 'src/types'
 export class CacheService {
   constructor(protected cacheManager: Cache, protected prefix: string) {}
 
-  public get = async <T>(key: string, options: CacheOption = {}): Promise<T | null> => {
+  public async get<T>(key: string, options: CacheOption = {}): Promise<T | null> {
     const fullKey = options.disablePrefix ? key : `${this.prefix}-${key}`
     const value = await this.cacheManager.get(fullKey)
 
@@ -17,23 +17,23 @@ export class CacheService {
     return JSON.parse(value as any)
   }
 
-  public set = async <T>(key: string, value: T, options: CacheOption = {}, config?: CachingConfig) => {
+  public async set<T>(key: string, value: T, options: CacheOption = {}, config?: CachingConfig) {
     const fullKey = options.disablePrefix ? key : `${this.prefix}-${key}`
     await this.cacheManager.set(fullKey, JSON.stringify(value), config)
   }
 
-  public del = async (key: string, options: CacheOption = {}) => {
+  public async del(key: string, options: CacheOption = {}) {
     const fullKey = options.disablePrefix ? key : `${this.prefix}-${key}`
 
     await this.cacheManager.del(fullKey)
   }
 
-  public getOrFetch = async <T>(
+  public async getOrFetch<T>(
     key: string,
     options: CacheOption = {},
     fetch: () => Promise<T>,
     config?: CachingConfig,
-  ): Promise<T> => {
+  ): Promise<T> {
     const result = await this.get<T>(key, options)
 
     if (result) {

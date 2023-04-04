@@ -1,3 +1,5 @@
+import { type Dayjs } from 'dayjs'
+
 export type CacheOption = {
   disablePrefix?: boolean
 }
@@ -9,15 +11,16 @@ export type JwtResult = {
 }
 
 export type JwtPayload = {
-  username: string
+  name: string
   email: string
 }
 
 export type User = {
-  id: string
-  username: string
   email: string
   name: string
   password: string
   salt: string
+  status: boolean
+  createTime: Dayjs
+  expireTime: Dayjs
 }

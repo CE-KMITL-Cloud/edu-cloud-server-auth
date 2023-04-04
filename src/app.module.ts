@@ -2,10 +2,11 @@ import { Module } from '@nestjs/common'
 import { ConfigModule } from '@nestjs/config'
 
 import { AppController } from './app.controller'
-import { AuthModule } from './auth/auth.module'
 
+import { AuthModule } from 'src/auth/auth.module'
 import { config } from 'src/config'
 import { UserModule } from 'src/modules/user/user.module'
+import { PrismaModule } from 'src/prisma/prisma.module'
 
 @Module({
   imports: [
@@ -17,6 +18,7 @@ import { UserModule } from 'src/modules/user/user.module'
     }),
     UserModule,
     AuthModule,
+    PrismaModule,
   ],
   controllers: [AppController],
 })

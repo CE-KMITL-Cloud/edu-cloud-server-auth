@@ -1,98 +1,72 @@
-import { Inject, Injectable, Logger } from '@nestjs/common'
-import { v4 as uuidv4 } from 'uuid'
+import { Injectable, Logger } from '@nestjs/common'
+import { Prisma } from '@prisma/client'
+import dayjs from 'dayjs'
 
-import { CreateUserDTO } from './user.dto'
-
-import { CacheService } from 'src/cache/cache.service'
-import { INJECT_CACHE } from 'src/cache/cache.utils'
+// import { v4 as uuidv4 } from 'uuid'
+// import { CreateUserDTO } from './user.dto'
+// import { CacheService } from 'src/cache/cache.service'
+// import { INJECT_CACHE } from 'src/cache/cache.utils'
+import { getUserFromUserModel } from 'src/database/converter'
+import { DuplicateDataException } from 'src/exception'
+import { PrismaService } from 'src/prisma/prisma.service'
+import { QueryHelper } from 'src/prisma/query-helper'
 import { User } from 'src/types'
 
 @Injectable()
 export class UserService {
   private readonly logger = new Logger(UserService.name)
 
-  constructor(@Inject(INJECT_CACHE) private cacheService: CacheService) {}
-
-  private readonly users: User[] = [
-    {
-      id: '1',
-      name: 'a',
-      username: 'aaaaaaaa',
-      email: 'a@gmail.com',
-      password: 'jeskbges',
-      salt: 'weighiewlsgn',
-    },
-    {
-      id: '2',
-      name: 'b',
-      username: 'bbbbbbbb',
-      email: 'b@gmail.com',
-      password: 'wealghwlieg',
-      salt: 'zknknirnh',
-    },
-    {
-      id: '3',
-      name: 'c',
-      username: 'cccccccc',
-      email: 'c@gmail.com',
-      password: 'lmjomqd',
-      salt: 'ljbugyfywwwuksgb',
-    },
-    {
-      id: '4',
-      name: 'd',
-      username: 'dddddddd',
-      email: 'd@gmail.com',
-      password: 'dsafbkaevfyufฟก',
-      salt: 'vjzoozoeufbseufb',
-    },
-  ]
-
-  public async getByUsername(username: string): Promise<User | undefined> {
-    return this.users.find((user) => user.username === username)
-  }
+  constructor(private readonly prisma: PrismaService, private readonly query: QueryHelper) {}
 
   public async getByEmail(email: string): Promise<User | undefined> {
-    return this.users.find((user) => user.email === email)
+    const student = await this.prisma.student.findUnique({
+      where: {
+        username: email.toLowerCase(),
+      },
+    })
+
+    return getUserFromUserModel(student)
   }
 
-  public async checkExistingUser(email: string, username: string): Promise<boolean> {
-    return this.getByUsername(username) !== undefined || this.getByEmail(email) !== undefined
+  public async checkExistingUser(email: string): Promise<boolean> {
+    const count = await this.prisma.student.count({
+      where: {
+        username: {
+          equals: email,
+          mode: 'insensitive',
+        },
+      },
+    })
+
+    return count > 0
   }
 
-  public async createUser(createUserDTO: CreateUserDTO, hashedPassword: string, salt: string): Promise<User> {
-    return {
-      id: uuidv4(),
-      name: createUserDTO.username,
-      username: createUserDTO.username,
-      email: createUserDTO.email,
-      password: hashedPassword,
-      salt: salt,
-    }
-  }
-
-  public async changePassword(username: string, hashedPassword: string, salt: string): Promise<void> {
-    const index = this.users.findIndex((user) => user.username === username)
-    this.users[index].password = hashedPassword
-    this.users[index].salt = salt
-  }
-
-  public async validateResetPasswordOtp(username: string, otp: string): Promise<boolean> {
+  public async createUser(name: string, email: string, hashedPassword: string, salt: string): Promise<User> {
     try {
-      const cacheKey = this.getUserForgotPasswordOtpCacheKey(username)
-      const otpFromCache = await this.cacheService.get<string>(cacheKey)
+      const user = await this.query.student.createUser({
+        password: hashedPassword,
+        salt: salt,
+        name: name,
+        email: email,
+        status: true,
+        createTime: dayjs(),
+        expireTime: dayjs().add(4, 'year'),
+      })
 
-      if (!!otpFromCache && otpFromCache === otp) {
-        await this.cacheService.del(cacheKey)
-        return true
-      } else {
-        return false
-      }
+      return getUserFromUserModel(user)
     } catch (error) {
-      this.logger.error(error)
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          // * Duplicate data
+          throw new DuplicateDataException((error.meta?.target as string[]) ?? [])
+        }
+      }
+      this.logger.error(`[ArtistService - createArtist] ERROR:`, error)
       throw error
     }
   }
 
-  private getUserForgotPasswordOtpCacheKey = (username: string) => `${username}-forgot-password-otp`.toLowerCase()
+  public async changePassword(email: string, hashedPassword: string, salt: string): Promise<void> {
+    this.query.student.editUserPassword(email, hashedPassword, salt)
+  }
 }

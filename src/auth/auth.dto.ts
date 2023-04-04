@@ -40,12 +40,12 @@ export class TokenResponseDTO {
 
 export class LoginDTO {
   @ApiProperty({
-    name: 'identifier',
-    description: `user's email or username`,
+    name: 'email',
+    description: `user's email`,
     type: String,
   })
   @IsString()
-  identifier: string
+  email: string
 
   @ApiProperty({
     name: 'password',
@@ -62,56 +62,12 @@ export class RegisterResponseDTO extends TokenResponseDTO {}
 
 export class ForgotPasswordDTO {
   @ApiProperty({
-    name: 'identifier',
-    description: `user's email or username`,
+    name: 'email',
+    description: `user's email`,
     type: String,
   })
   @IsString()
-  identifier: string
-}
-
-export class ForgotPasswordResponseDTO {
-  @ApiProperty({
-    name: 'referenceCode',
-    description: `Reference code of the OTP`,
-    type: String,
-  })
-  @IsString()
-  referenceCode: string
-
-  @ApiProperty({
-    name: 'partialEmail',
-    description: `Partially user's email`,
-    type: String,
-  })
-  @IsString()
-  partialEmail: string
-}
-
-export class ResetPasswordDTO {
-  @ApiProperty({
-    name: 'identifier',
-    description: `user's email or username`,
-    type: String,
-  })
-  @IsString()
-  identifier: string
-
-  @ApiProperty({
-    name: 'otp',
-    description: `OTP from email`,
-    type: String,
-  })
-  @IsString()
-  otp: string
-
-  @ApiProperty({
-    name: 'password',
-    description: `New password`,
-    type: String,
-  })
-  @ValidatePassword()
-  password: string
+  email: string
 }
 
 export class ChangePasswordDTO {
@@ -132,11 +88,46 @@ export class ChangePasswordDTO {
   newPassword: string
 }
 
-export class CreateAdminDTO {
-  @ApiProperty({
-    name: 'token',
-    type: String,
-  })
-  @IsString()
-  token: string
-}
+// export class ForgotPasswordResponseDTO {
+//   @ApiProperty({
+//     name: 'referenceCode',
+//     description: `Reference code of the OTP`,
+//     type: String,
+//   })
+//   @IsString()
+//   referenceCode: string
+
+//   @ApiProperty({
+//     name: 'partialEmail',
+//     description: `Partially user's email`,
+//     type: String,
+//   })
+//   @IsString()
+//   partialEmail: string
+// }
+
+// export class ResetPasswordDTO {
+//   @ApiProperty({
+//     name: 'email',
+//     description: `user's email`,
+//     type: String,
+//   })
+//   @IsString()
+//   email: string
+
+//   @ApiProperty({
+//     name: 'otp',
+//     description: `OTP from email`,
+//     type: String,
+//   })
+//   @IsString()
+//   otp: string
+
+//   @ApiProperty({
+//     name: 'password',
+//     description: `New password`,
+//     type: String,
+//   })
+//   @ValidatePassword()
+//   password: string
+// }
