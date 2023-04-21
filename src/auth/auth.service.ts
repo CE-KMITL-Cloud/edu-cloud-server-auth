@@ -3,9 +3,12 @@ import { JwtService } from '@nestjs/jwt'
 
 import { getHashedPassword } from 'src/utils/getHash'
 
+import { ValidateResult } from './auth.interface'
+
 import { CacheService } from 'src/cache/cache.service'
 import { INJECT_CACHE } from 'src/cache/cache.utils'
-import { JwtPayload, JwtResult, User } from 'src/types'
+import { ProxmoxService } from 'src/modules/proxmox/proxmox.service'
+import { AccessTicketCookie, JwtPayload, JwtResult, Role, User } from 'src/types'
 
 @Injectable()
 export class AuthService {
@@ -13,26 +16,38 @@ export class AuthService {
 
   constructor(
     private readonly jwtService: JwtService,
+    private readonly proxmoxService: ProxmoxService,
+
     @Inject(INJECT_CACHE) private readonly cacheService: CacheService,
   ) {}
 
-  // TODO: Use real hashedPassword
-  public async validate(user: User, password: string): Promise<boolean> {
+  /**
+   *
+   * @param user
+   * @param password
+   * @returns hashedPassword if true else false
+   */
+  public async validate(user: User, password: string): Promise<ValidateResult> {
     const hashedPassword = getHashedPassword(password, user.salt)
 
     if (hashedPassword === user.password) {
-      return true
+      return {
+        success: true,
+        data: hashedPassword,
+      }
     }
 
     this.logger.error('[AuthService - validateUser] Invalid Password', {
       email: user.email,
     })
 
-    return false
+    return {
+      success: false,
+    }
   }
 
-  public async login(user: User): Promise<JwtResult> {
-    const payload: JwtPayload = { email: user.email, name: user.name }
+  public async login(user: User, role: Role): Promise<JwtResult> {
+    const payload: JwtPayload = { email: user.email, name: user.name, role: role }
 
     const accessToken = this.getAccessToken(payload)
     const refreshToken = this.getRefreshToken(payload)
@@ -42,8 +57,8 @@ export class AuthService {
     return { accessToken, refreshToken, tokenType: 'Bearer' }
   }
 
-  public async refresh(user: User, oldRefreshToken: string): Promise<JwtResult> {
-    const payload: JwtPayload = { email: user.email, name: user.name }
+  public async refresh(user: User, oldRefreshToken: string, role: Role): Promise<JwtResult> {
+    const payload: JwtPayload = { email: user.email, name: user.name, role: role }
 
     const accessToken = this.getAccessToken(payload)
     const refreshToken = this.getRefreshToken(payload)
@@ -82,5 +97,13 @@ export class AuthService {
         return null
       }
     }
+  }
+
+  public async createProxmoxUser(email: string, password: string, groups: Exclude<Role, 'admin'>): Promise<string> {
+    return this.proxmoxService.createUser(email, password, groups)
+  }
+
+  public async getAccessTicket(email: string, password: string): Promise<AccessTicketCookie> {
+    return this.proxmoxService.accessTicket(email, password)
   }
 }

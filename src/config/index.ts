@@ -13,6 +13,8 @@ export const config = (): Config => {
     port: parseInt(process.env.PORT || '5000'),
     jwtSecret: process.env.JWT_SECRET || 'cepp',
 
+    proxmoxApiUrl: process.env.PROXMOX_API_URL || '',
+
     redis: {
       host: process.env.REDIS_HOST || 'localhost',
       port: parseInt(process.env.REDIS_PORT || '6379'),

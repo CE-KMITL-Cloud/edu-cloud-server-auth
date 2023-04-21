@@ -14,4 +14,7 @@ export class CreateUserDTO {
   @ApiProperty({ name: 'name', description: 'name of the account', example: 'someone yoo', type: String })
   @IsString()
   name: string
+
+  @ApiProperty({ name: 'role', description: 'role of user', example: 'student', type: String })
+  role: string
 }

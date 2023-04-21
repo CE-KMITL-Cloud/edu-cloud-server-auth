@@ -1,5 +1,17 @@
-import { Body, Controller, Post, PreconditionFailedException, UnauthorizedException } from '@nestjs/common'
+import {
+  BadRequestException,
+  Body,
+  Controller,
+  Post,
+  PreconditionFailedException,
+  Res,
+  UnauthorizedException,
+} from '@nestjs/common'
 import { ApiBody, ApiCreatedResponse, ApiTags } from '@nestjs/swagger'
+import dayjs from 'dayjs'
+import { Response } from 'express'
+
+import { isUserRole } from 'src/types/type-guard'
 
 import { CurrentUser } from 'src/decorator/currentUser'
 import { JwtAuth } from 'src/decorator/jwtAuth'
@@ -28,19 +40,30 @@ export class AuthController {
 
   @Post('user/login')
   @ApiBody({ type: LoginDTO })
-  public async login(@Body() loginDto: LoginDTO): Promise<LoginResponseDTO> {
+  public async login(
+    @Body() loginDto: LoginDTO,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<LoginResponseDTO> {
     try {
-      const user = await this.userService.getByEmail(loginDto.email)
+      const { user, role } = await this.userService.getUserAndRoleFromTable(loginDto.email)
 
       if (!user) throw new LoginFailedException()
 
       const result = await this.authService.validate(user, loginDto.password)
 
-      if (result) {
-        return this.authService.login(user)
+      if (!result.success) {
+        throw new LoginFailedException()
       }
 
-      throw new LoginFailedException()
+      const cookie = await this.authService.getAccessTicket(user.email, result.data)
+
+      for (const [key, value] of Object.entries(cookie)) {
+        response.cookie(key, value, {
+          expires: dayjs().add(1, 'day').toDate(),
+        })
+      }
+
+      return this.authService.login(user, role)
     } catch (err) {
       // * force return 401 for login
       throw new LoginFailedException()
@@ -56,13 +79,13 @@ export class AuthController {
       throw new UnauthorizedException('Invalid Token')
     }
 
-    const user = await this.userService.getByEmail(validationResult.email)
+    const { user, role } = await this.userService.getUserAndRoleFromTable(validationResult.email)
 
     if (!user) {
       throw new UnauthorizedException('User not found')
     }
 
-    const result = await this.authService.refresh(user, tokenDto.refreshToken)
+    const result = await this.authService.refresh(user, tokenDto.refreshToken, role)
 
     return result
   }
@@ -70,6 +93,10 @@ export class AuthController {
   @Post('user/register')
   @ApiBody({ type: CreateUserDTO })
   public async register(@Body() createUserDto: CreateUserDTO): Promise<RegisterResponseDTO> {
+    if (!isUserRole(createUserDto.role)) {
+      throw new BadRequestException()
+    }
+
     const existedUser = await this.userService.checkExistingUser(createUserDto.email)
 
     if (existedUser) {
@@ -79,9 +106,20 @@ export class AuthController {
     const salt = generateSalt()
     const hashedPassword = getHashedPassword(createUserDto.password, salt)
 
-    const user: User = await this.userService.createUser(createUserDto.name, createUserDto.email, hashedPassword, salt)
+    // * Proxmox
+    if (createUserDto.role !== 'admin') {
+      await this.authService.createProxmoxUser(createUserDto.email, hashedPassword, createUserDto.role)
+    }
 
-    return this.authService.login(user)
+    const user: User = await this.userService.createUser(
+      createUserDto.name,
+      createUserDto.email,
+      createUserDto.role,
+      hashedPassword,
+      salt,
+    )
+
+    return this.authService.login(user, createUserDto.role)
   }
 
   @Post('user/change-password')

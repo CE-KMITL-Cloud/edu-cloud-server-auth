@@ -8,6 +8,7 @@ import { AuthService } from './auth.service'
 import { JwtStrategy } from './strategy/jwt.strategy'
 
 import { getCacheFactory } from 'src/cache/cache.utils'
+import { ProxmoxService } from 'src/modules/proxmox/proxmox.service'
 import { UserModule } from 'src/modules/user/user.module'
 
 const cacheFactory = getCacheFactory('auth')
@@ -25,7 +26,7 @@ const cacheFactory = getCacheFactory('auth')
     UserModule,
     PassportModule,
   ],
-  providers: [AuthService, JwtStrategy, cacheFactory],
+  providers: [AuthService, JwtStrategy, ProxmoxService, cacheFactory],
   exports: [AuthService],
   controllers: [AuthController],
 })

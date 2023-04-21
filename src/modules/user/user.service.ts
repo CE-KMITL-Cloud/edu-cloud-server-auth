@@ -1,16 +1,12 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Prisma } from '@prisma/client'
+import { Prisma, admin, faculty, student } from '@prisma/client'
 import dayjs from 'dayjs'
 
-// import { v4 as uuidv4 } from 'uuid'
-// import { CreateUserDTO } from './user.dto'
-// import { CacheService } from 'src/cache/cache.service'
-// import { INJECT_CACHE } from 'src/cache/cache.utils'
 import { getUserFromUserModel } from 'src/database/converter'
 import { DuplicateDataException } from 'src/exception'
 import { PrismaService } from 'src/prisma/prisma.service'
 import { QueryHelper } from 'src/prisma/query-helper'
-import { User } from 'src/types'
+import { Role, User } from 'src/types'
 
 @Injectable()
 export class UserService {
@@ -18,42 +14,67 @@ export class UserService {
 
   constructor(private readonly prisma: PrismaService, private readonly query: QueryHelper) {}
 
-  public async getByEmail(email: string): Promise<User | undefined> {
-    const student = await this.prisma.student.findUnique({
-      where: {
-        username: email.toLowerCase(),
-      },
-    })
+  public async getByEmail(email: string): Promise<User | null> {
+    try {
+      const admin = await this.query.admin.getOne(email)
+      if (admin !== null) {
+        return getUserFromUserModel(admin)
+      }
 
-    return getUserFromUserModel(student)
+      const student = await this.query.student.getOne(email)
+      if (student !== null) {
+        return getUserFromUserModel(student)
+      }
+
+      const faculty = await this.query.faculty.getOne(email)
+      if (faculty !== null) {
+        return getUserFromUserModel(faculty)
+      }
+
+      return null
+    } catch (error) {
+      this.logger.error(`[UserService - getByEmail] ERROR:`, error)
+      throw error
+    }
   }
 
   public async checkExistingUser(email: string): Promise<boolean> {
-    const count = await this.prisma.student.count({
-      where: {
-        username: {
-          equals: email,
-          mode: 'insensitive',
-        },
-      },
-    })
-
-    return count > 0
+    const result = await this.getUserAndRoleFromTable(email)
+    return result !== null
   }
 
-  public async createUser(name: string, email: string, hashedPassword: string, salt: string): Promise<User> {
-    try {
-      const user = await this.query.student.createUser({
-        password: hashedPassword,
-        salt: salt,
-        name: name,
-        email: email,
-        status: true,
-        createTime: dayjs(),
-        expireTime: dayjs().add(4, 'year'),
-      })
+  public async createUser(
+    name: string,
+    email: string,
+    role: Role,
+    hashedPassword: string,
+    salt: string,
+  ): Promise<User> {
+    const data: User = {
+      password: hashedPassword,
+      salt: salt,
+      name: name,
+      email: email,
+      status: true,
+      createTime: dayjs(),
+      expireTime: dayjs().add(4, 'year'),
+    }
 
-      return getUserFromUserModel(user)
+    try {
+      switch (role) {
+        case 'admin': {
+          return getUserFromUserModel(await this.query.admin.createUser(data))
+        }
+        case 'faculty': {
+          return getUserFromUserModel(await this.query.faculty.createUser(data))
+        }
+        case 'student': {
+          return getUserFromUserModel(await this.query.student.createUser(data))
+        }
+        default: {
+          console.log('impossible')
+        }
+      }
     } catch (error) {
       if (error instanceof Prisma.PrismaClientKnownRequestError) {
         if (error.code === 'P2002') {
@@ -61,12 +82,37 @@ export class UserService {
           throw new DuplicateDataException((error.meta?.target as string[]) ?? [])
         }
       }
-      this.logger.error(`[ArtistService - createArtist] ERROR:`, error)
+      this.logger.error(`[UserService - createUser] ERROR:`, error)
       throw error
     }
   }
 
+  // TODO: implement this
   public async changePassword(email: string, hashedPassword: string, salt: string): Promise<void> {
     this.query.student.editUserPassword(email, hashedPassword, salt)
+  }
+
+  public async getUserAndRoleFromTable(email: string): Promise<{ role: Role; user: User } | null> {
+    try {
+      const admin = await this.query.admin.getOne(email)
+      if (admin !== null) {
+        return { user: getUserFromUserModel(admin), role: 'admin' }
+      }
+
+      const student = await this.query.student.getOne(email)
+      if (student !== null) {
+        return { user: getUserFromUserModel(student), role: 'student' }
+      }
+
+      const faculty = await this.query.faculty.getOne(email)
+      if (faculty !== null) {
+        return { user: getUserFromUserModel(faculty), role: 'faculty' }
+      }
+
+      return null
+    } catch (error) {
+      this.logger.error(`[UserService - getUserAndRoleFromTable] ERROR:`, error)
+      throw error
+    }
   }
 }

@@ -2,6 +2,8 @@ export type Config = {
   port: number
   jwtSecret: string
 
+  proxmoxApiUrl: string
+
   redis: {
     host: string
     port: number

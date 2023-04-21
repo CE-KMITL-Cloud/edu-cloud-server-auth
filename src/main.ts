@@ -2,6 +2,7 @@ import { Logger } from '@nestjs/common'
 import { ConfigService } from '@nestjs/config'
 import { NestFactory } from '@nestjs/core'
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger'
+import cookieParser from 'cookie-parser'
 
 import { Config } from 'src/config/config'
 
@@ -14,6 +15,8 @@ async function bootstrap() {
 
   // ! Disable this
   app.enableCors()
+
+  app.use(cookieParser())
 
   let docPath = 'doc'
   if (process.env.NODE_ENV == 'production') {

@@ -60,15 +60,19 @@ const convert = ({
 async function main() {
   for (const user of users) {
     const restData = convert(user)
-
-    await prisma.student.create({
-      data: {
-        ...restData,
-        status: true,
-        create_time: dayjs().unix().toFixed(),
-        expire_time: dayjs().add(4, 'year').unix().toFixed(),
-      },
-    })
+    try {
+      await prisma.student.create({
+        data: {
+          ...restData,
+          status: true,
+          create_time: dayjs().unix().toFixed(),
+          expire_time: dayjs().add(4, 'year').unix().toFixed(),
+        },
+      })
+    } catch (error) {
+      console.error('mee laew')
+      break
+    }
   }
 
   const usersToLog = await prisma.student.findMany({

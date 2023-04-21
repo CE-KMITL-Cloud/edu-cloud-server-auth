@@ -13,6 +13,7 @@ export type JwtResult = {
 export type JwtPayload = {
   name: string
   email: string
+  role: string
 }
 
 export type User = {
@@ -23,4 +24,11 @@ export type User = {
   status: boolean
   createTime: Dayjs
   expireTime: Dayjs
+}
+
+export type Role = 'admin' | 'student' | 'faculty'
+
+export type AccessTicketCookie = {
+  PVEAuthCookie: string
+  CSRFPreventionCookie: string
 }

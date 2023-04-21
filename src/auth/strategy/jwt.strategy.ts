@@ -7,7 +7,7 @@ import { JwtPayload } from 'src/types'
 
 @Injectable()
 export class JwtStrategy extends PassportStrategy(Strategy) {
-  constructor(readonly configService: ConfigService) {
+  constructor(private readonly configService: ConfigService) {
     super({
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       ignoreExpiration: false,
@@ -16,6 +16,6 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
   }
 
   public async validate(payload: any): Promise<JwtPayload> {
-    return { name: payload.name, email: payload.email }
+    return { name: payload.name, email: payload.email, role: payload.role }
   }
 }
