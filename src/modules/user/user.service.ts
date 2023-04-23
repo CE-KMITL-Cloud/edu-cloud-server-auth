@@ -1,10 +1,9 @@
 import { Injectable, Logger } from '@nestjs/common'
-import { Prisma, admin, faculty, student } from '@prisma/client'
+import { Prisma } from '@prisma/client'
 import dayjs from 'dayjs'
 
 import { getUserFromUserModel } from 'src/database/converter'
 import { DuplicateDataException } from 'src/exception'
-import { PrismaService } from 'src/prisma/prisma.service'
 import { QueryHelper } from 'src/prisma/query-helper'
 import { Role, User } from 'src/types'
 
@@ -12,7 +11,7 @@ import { Role, User } from 'src/types'
 export class UserService {
   private readonly logger = new Logger(UserService.name)
 
-  constructor(private readonly prisma: PrismaService, private readonly query: QueryHelper) {}
+  constructor(private readonly query: QueryHelper) {}
 
   public async getByEmail(email: string): Promise<User | null> {
     try {

@@ -14,7 +14,7 @@ async function bootstrap() {
   const app = await NestFactory.create(AppModule)
 
   // ! Disable this
-  app.enableCors()
+  app.enableCors({ credentials: true, origin: true })
 
   app.use(cookieParser())
 
