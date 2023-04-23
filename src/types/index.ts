@@ -30,5 +30,12 @@ export type Role = 'admin' | 'student' | 'faculty'
 
 export type AccessTicketCookie = {
   PVEAuthCookie: string
-  CSRFPreventionCookie: string
+  CSRFPreventionToken: string
+}
+
+export type InstanceLimitConfig = {
+  maxCPU: number
+  maxRAM: number
+  maxDisk: number
+  maxInstance: number
 }

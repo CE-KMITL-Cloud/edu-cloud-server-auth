@@ -92,8 +92,11 @@ export class AuthController {
 
   @Post('user/register')
   @ApiBody({ type: CreateUserDTO })
-  public async register(@Body() createUserDto: CreateUserDTO): Promise<RegisterResponseDTO> {
-    if (!isUserRole(createUserDto.role)) {
+  public async register(
+    @Body() createUserDto: CreateUserDTO,
+    @Res({ passthrough: true }) response: Response,
+  ): Promise<RegisterResponseDTO> {
+    if (!isUserRole(createUserDto.role) || createUserDto.role !== 'admin') {
       throw new BadRequestException()
     }
 
@@ -106,10 +109,9 @@ export class AuthController {
     const salt = generateSalt()
     const hashedPassword = getHashedPassword(createUserDto.password, salt)
 
-    // * Proxmox
-    if (createUserDto.role !== 'admin') {
-      await this.authService.createProxmoxUser(createUserDto.email, hashedPassword, createUserDto.role)
-    }
+    await this.authService.createProxmoxUser(createUserDto.email, hashedPassword, createUserDto.role)
+
+    await this.userService.createInstanceLimit(createUserDto.email, createUserDto.role)
 
     const user: User = await this.userService.createUser(
       createUserDto.name,
@@ -118,6 +120,14 @@ export class AuthController {
       hashedPassword,
       salt,
     )
+
+    const cookie = await this.authService.getAccessTicket(user.email, hashedPassword)
+
+    for (const [key, value] of Object.entries(cookie)) {
+      response.cookie(key, value, {
+        expires: dayjs().add(1, 'day').toDate(),
+      })
+    }
 
     return this.authService.login(user, createUserDto.role)
   }

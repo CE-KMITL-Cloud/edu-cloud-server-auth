@@ -114,4 +114,50 @@ export class UserService {
       throw error
     }
   }
+
+  public async createInstanceLimit(email: string, role: Role): Promise<void> {
+    try {
+      switch (role) {
+        case 'student': {
+          this.query.instanceLimit.createInstanceLimit(email, {
+            maxCPU: 4,
+            maxRAM: 4,
+            maxDisk: 40,
+            maxInstance: 1,
+          })
+          break
+        }
+        case 'faculty': {
+          this.query.instanceLimit.createInstanceLimit(email, {
+            maxCPU: 12,
+            maxRAM: 12,
+            maxDisk: 120,
+            maxInstance: 3,
+          })
+          break
+        }
+        case 'admin': {
+          this.query.instanceLimit.createInstanceLimit(email, {
+            maxCPU: 120,
+            maxRAM: 120,
+            maxDisk: 1200,
+            maxInstance: 30,
+          })
+          break
+        }
+        default: {
+          console.log('impossible')
+        }
+      }
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        if (error.code === 'P2002') {
+          // * Duplicate data
+          throw new DuplicateDataException((error.meta?.target as string[]) ?? [])
+        }
+      }
+      this.logger.error(`[UserService - createInstanceLimit] ERROR:`, error)
+      throw error
+    }
+  }
 }

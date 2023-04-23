@@ -54,7 +54,7 @@ export class ProxmoxService {
       const response = await this.axiosInstance.post<AccessTicketResponse>('access/ticket', data)
       if (response.status === 200) {
         return {
-          CSRFPreventionCookie: response.data.message.CSRFPreventionToken,
+          CSRFPreventionToken: response.data.message.CSRFPreventionToken,
           PVEAuthCookie: response.data.message.PVEAuthToken,
         }
       }

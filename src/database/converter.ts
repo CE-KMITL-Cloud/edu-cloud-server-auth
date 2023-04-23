@@ -1,9 +1,15 @@
-import { admin as AdminModel, student as StudentModel, faculty as facultyModel } from '@prisma/client'
+import {
+  admin as AdminModel,
+  faculty as FacultyModel,
+  instance_limit as InstanceLimitModel,
+  Prisma,
+  student as StudentModel,
+} from '@prisma/client'
 import dayjs from 'dayjs'
 
-import { User } from 'src/types'
+import { InstanceLimitConfig, User } from 'src/types'
 
-type UserModel = AdminModel | StudentModel | facultyModel
+type UserModel = AdminModel | StudentModel | FacultyModel
 
 export const getUserFromUserModel = (userModel: UserModel): User => {
   return {
@@ -17,7 +23,7 @@ export const getUserFromUserModel = (userModel: UserModel): User => {
   }
 }
 
-export const parseUserModelToUser = (user: User): UserModel => {
+export const parseUserToUserModel = (user: User): UserModel => {
   return {
     username: user.email,
     name: user.name,
@@ -26,5 +32,18 @@ export const parseUserModelToUser = (user: User): UserModel => {
     status: user.status,
     create_time: user.createTime.unix().toFixed(),
     expire_time: user.expireTime.unix().toFixed(),
+  }
+}
+
+export const parseInstanceLimitConfigToInstanceLimitModel = (
+  email: string,
+  config: InstanceLimitConfig,
+): InstanceLimitModel => {
+  return {
+    max_cpu: new Prisma.Decimal(config.maxCPU),
+    max_disk: new Prisma.Decimal(config.maxDisk),
+    max_instance: BigInt(config.maxInstance),
+    max_ram: new Prisma.Decimal(config.maxRAM),
+    username: email,
   }
 }

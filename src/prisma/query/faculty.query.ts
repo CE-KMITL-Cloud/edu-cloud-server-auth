@@ -1,13 +1,13 @@
 import { faculty as FacultyModel, PrismaClient } from '@prisma/client'
 
-import { parseUserModelToUser } from 'src/database/converter'
+import { parseUserToUserModel } from 'src/database/converter'
 import { User } from 'src/types'
 
 export class FacultyQuery {
   constructor(private prismaUser: PrismaClient['faculty']) {}
 
   public async createUser(user: User): Promise<FacultyModel> {
-    const userModel = parseUserModelToUser(user)
+    const userModel = parseUserToUserModel(user)
     return this.prismaUser.create({
       data: userModel,
     })

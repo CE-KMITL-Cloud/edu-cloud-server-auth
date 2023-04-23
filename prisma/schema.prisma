@@ -28,16 +28,18 @@ model faculty {
 }
 
 model instance {
-  vmid        String   @id
-  ownerid     String?
-  node        String?
-  name        String?
-  is_template Boolean?
-  max_cpu     Decimal? @db.Decimal
-  max_ram     Decimal? @db.Decimal
-  max_disk    Decimal? @db.Decimal
-  create_time String?
-  expire_time String?
+  vmid           String   @id
+  ownerid        String?
+  node           String?
+  name           String?
+  is_template    Boolean?
+  max_cpu        Decimal? @db.Decimal
+  max_ram        Decimal? @db.Decimal
+  max_disk       Decimal? @db.Decimal
+  create_time    String?
+  expire_time    String?
+  will_be_expire Boolean?
+  expired        Boolean?
 }
 
 model instance_limit {
@@ -57,6 +59,7 @@ model pool {
   member      String[]
   create_time String?
   expire_time String?
+  status      Boolean?
 }
 
 model sizing {
