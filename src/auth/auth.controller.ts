@@ -96,7 +96,7 @@ export class AuthController {
     @Body() createUserDto: CreateUserDTO,
     @Res({ passthrough: true }) response: Response,
   ): Promise<RegisterResponseDTO> {
-    if (!isUserRole(createUserDto.role) || createUserDto.role !== 'admin') {
+    if (!isUserRole(createUserDto.role) || createUserDto.role === 'admin') {
       throw new BadRequestException()
     }
 
