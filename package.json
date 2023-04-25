@@ -10,7 +10,7 @@
     "dev": "ENV_NAME=development nest start --watch",
     "start": "nest start",
     "start:debug": "nest start --debug --watch",
-    "start:prod": "node dist/main",
+    "start:prod": "node dist/src/main",
     "prepare": "husky install",
     "format": "prettier --write \"{src,pages,test}/**/*.{json,js,jsx,ts,tsx,html}\"",
     "lint": "eslint --quiet \"{src,pages}/**/*.{js,jsx,ts,tsx}\"",
