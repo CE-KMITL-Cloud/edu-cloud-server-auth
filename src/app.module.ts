@@ -12,7 +12,8 @@ import { PrismaModule } from 'src/prisma/prisma.module'
   imports: [
     ConfigModule.forRoot({
       ignoreEnvFile: process.env.NODE_ENV === 'production',
-      envFilePath: `envs/.env.${process.env.ENV_NAME ?? 'development'}`,
+      // envFilePath: `envs/.env.${process.env.ENV_NAME ?? 'development'}`,
+      envFilePath: '.env',
       load: [config],
       isGlobal: true,
     }),
